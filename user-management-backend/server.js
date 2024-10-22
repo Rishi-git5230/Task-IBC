@@ -14,9 +14,9 @@ app.use(bodyParser.json());
 // MySQL connection
 const db = mysql.createConnection({
   host: 'localhost',
-  user: 'your_username', // replace with your MySQL username
-  password: 'your_password', // replace with your MySQL password
-  database: 'user_management',
+  user: 'root', // replace with your MySQL username
+  password: 'MYSQL', // replace with your MySQL password
+  database: 'user_data',
 });
 
 // Connect to the database
@@ -29,7 +29,7 @@ db.connect(err => {
 
 // Get all users
 app.get('/api/users', (req, res) => {
-  db.query('SELECT * FROM users WHERE is_deleted = FALSE', (err, results) => {
+  db.query('SELECT * FROM users WHERE user_status != "Deleted"', (err, results) => {
     if (err) return res.status(500).json(err);
     res.json(results);
   });
@@ -37,7 +37,7 @@ app.get('/api/users', (req, res) => {
 
 // Get deleted users
 app.get('/api/deleted-users', (req, res) => {
-  db.query('SELECT * FROM users WHERE is_deleted = TRUE', (err, results) => {
+  db.query('SELECT * FROM users WHERE user_status = "Deleted"', (err, results) => {
     if (err) return res.status(500).json(err);
     res.json(results);
   });
@@ -45,27 +45,35 @@ app.get('/api/deleted-users', (req, res) => {
 
 // Add a new user
 app.post('/api/users', (req, res) => {
-  const { name, email } = req.body;
-  db.query('INSERT INTO users (name, email) VALUES (?, ?)', [name, email], (err, results) => {
-    if (err) return res.status(500).json(err);
-    res.json({ id: results.insertId, name, email });
-  });
+  const { first_name, last_name, dob, gender, email, full_address, mobile } = req.body;
+  db.query(
+    'INSERT INTO users (first_name, last_name, dob, gender, email, full_address, mobile, user_status) VALUES (?, ?, ?, ?, ?, ?, ?, "Active")',
+    [first_name, last_name, dob, gender, email, full_address, mobile],
+    (err, results) => {
+      if (err) return res.status(500).json(err);
+      res.json({ id: results.insertId, first_name, last_name, dob, gender, email, full_address, mobile, user_status: "Active" });
+    }
+  );
 });
 
 // Update a user
 app.put('/api/users/:id', (req, res) => {
   const { id } = req.params;
-  const { name, email } = req.body;
-  db.query('UPDATE users SET name = ?, email = ? WHERE id = ?', [name, email, id], (err) => {
-    if (err) return res.status(500).json(err);
-    res.json({ id, name, email });
-  });
+  const { first_name, last_name, dob, gender, email, full_address, mobile, user_status } = req.body;
+  db.query(
+    'UPDATE users SET first_name = ?, last_name = ?, dob = ?, gender = ?, email = ?, full_address = ?, mobile = ?, user_status = ? WHERE id = ?',
+    [first_name, last_name, dob, gender, email, full_address, mobile, user_status, id],
+    (err) => {
+      if (err) return res.status(500).json(err);
+      res.json({ id, first_name, last_name, dob, gender, email, full_address, mobile, user_status });
+    }
+  );
 });
 
 // Delete a user (soft delete)
 app.delete('/api/users/:id', (req, res) => {
   const { id } = req.params;
-  db.query('UPDATE users SET is_deleted = TRUE WHERE id = ?', [id], (err) => {
+  db.query('UPDATE users SET user_status = "Deleted" WHERE id = ?', [id], (err) => {
     if (err) return res.status(500).json(err);
     res.json({ message: 'User deleted' });
   });
@@ -74,7 +82,7 @@ app.delete('/api/users/:id', (req, res) => {
 // Enable a deleted user
 app.patch('/api/users/enable/:id', (req, res) => {
   const { id } = req.params;
-  db.query('UPDATE users SET is_deleted = FALSE WHERE id = ?', [id], (err) => {
+  db.query('UPDATE users SET user_status = "Active" WHERE id = ?', [id], (err) => {
     if (err) return res.status(500).json(err);
     res.json({ message: 'User enabled' });
   });
@@ -83,7 +91,7 @@ app.patch('/api/users/enable/:id', (req, res) => {
 // Bulk delete
 app.delete('/api/users/bulk-delete', (req, res) => {
   const { ids } = req.body; // Expecting an array of ids
-  db.query('UPDATE users SET is_deleted = TRUE WHERE id IN (?)', [ids], (err) => {
+  db.query('UPDATE users SET user_status = "Deleted" WHERE id IN (?)', [ids], (err) => {
     if (err) return res.status(500).json(err);
     res.json({ message: 'Users deleted' });
   });
