@@ -11,7 +11,7 @@ const App = () => {
         <Routes>
           <Route path="/" element={<UserTable />} />
           <Route path="/add-user" element={<UserForm />} />
-          {/* Add other routes as needed */}
+          {/* Add routes for other components like DeletedUsers, SearchUser, etc. */}
         </Routes>
       </Router>
     </UserProvider>
