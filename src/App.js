@@ -8,6 +8,10 @@ import TopMenu from './components/TopMenu';
 import DeletedUsers from './components/DeletedUsers';
 import SearchUser from './components/SearchUser';
 import './App.css';
+import Modal from 'react-modal';
+
+// Configure Modal
+Modal.setAppElement('#root');
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
