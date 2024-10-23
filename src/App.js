@@ -1,17 +1,33 @@
-import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { UserProvider } from './context/UserContext';
 import UserTable from './components/UserTable';
 import UserForm from './components/UserForm';
+import Login from './components/Login';
+import TopMenu from './components/TopMenu';
+import DeletedUsers from './components/DeletedUsers';
+import SearchUser from './components/SearchUser';
+import './App.css';
 
 const App = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const handleLogin = () => {
+    setIsLoggedIn(true);
+  };
+
   return (
     <UserProvider>
       <Router>
+        {/* Only show the TopMenu if logged in */}
+        {isLoggedIn && <TopMenu />}
+        
         <Routes>
-          <Route path="/" element={<UserTable />} />
-          <Route path="/add-user" element={<UserForm />} />
-          {/* Add routes for other components like DeletedUsers, SearchUser, etc. */}
+          <Route path="/login" element={<Login onLogin={handleLogin} />} />
+          <Route path="/" element={isLoggedIn ? <UserTable /> : <Navigate to="/login" />} />
+          <Route path="/add-user" element={isLoggedIn ? <UserForm /> : <Navigate to="/login" />} />
+          <Route path="/deleted-users" element={isLoggedIn ? <DeletedUsers /> : <Navigate to="/login" />} />
+          <Route path="/search" element={isLoggedIn ? <SearchUser /> : <Navigate to="/login" />} />
         </Routes>
       </Router>
     </UserProvider>

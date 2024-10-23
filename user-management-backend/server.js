@@ -35,6 +35,23 @@ app.get('/api/users', (req, res) => {
   });
 });
 
+app.get('/api/users', (req, res) => {
+  const { search } = req.query;
+  let query = 'SELECT * FROM users WHERE user_status != "Deleted"';
+  const params = [];
+
+  if (search) {
+      query += ' AND (first_name LIKE ? OR last_name LIKE ? OR id = ?)';
+      const likeSearch = `%${search}%`;
+      params.push(likeSearch, likeSearch, search);
+  }
+
+  db.query(query, params, (err, results) => {
+      if (err) return res.status(500).json(err);
+      res.json(results);
+  });
+});
+
 // Get deleted users
 app.get('/api/deleted-users', (req, res) => {
   db.query('SELECT * FROM users WHERE user_status = "Deleted"', (err, results) => {
