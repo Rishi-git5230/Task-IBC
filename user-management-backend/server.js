@@ -27,28 +27,11 @@ db.connect(err => {
 
 // REST API Endpoints
 
-// Get all users
+// Get all active users
 app.get('/api/users', (req, res) => {
   db.query('SELECT * FROM users WHERE user_status != "Deleted"', (err, results) => {
     if (err) return res.status(500).json(err);
     res.json(results);
-  });
-});
-
-app.get('/api/users', (req, res) => {
-  const { search } = req.query;
-  let query = 'SELECT * FROM users WHERE user_status != "Deleted"';
-  const params = [];
-
-  if (search) {
-      query += ' AND (first_name LIKE ? OR last_name LIKE ? OR id = ?)';
-      const likeSearch = `%${search}%`;
-      params.push(likeSearch, likeSearch, search);
-  }
-
-  db.query(query, params, (err, results) => {
-      if (err) return res.status(500).json(err);
-      res.json(results);
   });
 });
 
@@ -63,11 +46,15 @@ app.get('/api/deleted-users', (req, res) => {
 // Add a new user
 app.post('/api/users', (req, res) => {
   const { first_name, last_name, dob, gender, email, full_address, mobile } = req.body;
+  
   db.query(
     'INSERT INTO users (first_name, last_name, dob, gender, email, full_address, mobile, user_status) VALUES (?, ?, ?, ?, ?, ?, ?, "Active")',
     [first_name, last_name, dob, gender, email, full_address, mobile],
     (err, results) => {
-      if (err) return res.status(500).json(err);
+      if (err) {
+        console.error("Error inserting user:", err);
+        return res.status(500).json(err);
+      }
       res.json({ id: results.insertId, first_name, last_name, dob, gender, email, full_address, mobile, user_status: "Active" });
     }
   );
@@ -75,8 +62,10 @@ app.post('/api/users', (req, res) => {
 
 // Update a user
 app.put('/api/users/:id', (req, res) => {
+  
   const { id } = req.params;
   const { first_name, last_name, dob, gender, email, full_address, mobile, user_status } = req.body;
+  console.log(req.body);
   db.query(
     'UPDATE users SET first_name = ?, last_name = ?, dob = ?, gender = ?, email = ?, full_address = ?, mobile = ?, user_status = ? WHERE id = ?',
     [first_name, last_name, dob, gender, email, full_address, mobile, user_status, id],
@@ -87,8 +76,8 @@ app.put('/api/users/:id', (req, res) => {
   );
 });
 
-// Delete a user (soft delete)
-app.delete('/api/users/:id', (req, res) => {
+// Soft delete a user
+app.patch('/api/users/:id', (req, res) => {
   const { id } = req.params;
   db.query('UPDATE users SET user_status = "Deleted" WHERE id = ?', [id], (err) => {
     if (err) return res.status(500).json(err);
@@ -102,15 +91,6 @@ app.patch('/api/users/enable/:id', (req, res) => {
   db.query('UPDATE users SET user_status = "Active" WHERE id = ?', [id], (err) => {
     if (err) return res.status(500).json(err);
     res.json({ message: 'User enabled' });
-  });
-});
-
-// Bulk delete
-app.delete('/api/users/bulk-delete', (req, res) => {
-  const { ids } = req.body; // Expecting an array of ids
-  db.query('UPDATE users SET user_status = "Deleted" WHERE id IN (?)', [ids], (err) => {
-    if (err) return res.status(500).json(err);
-    res.json({ message: 'Users deleted' });
   });
 });
 

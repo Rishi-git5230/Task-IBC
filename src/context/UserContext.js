@@ -28,7 +28,8 @@ export const UserProvider = ({ children }) => {
   };
 
   // Add a new user
-  const addUser = async (firstName, lastName, dob, gender, email, fullAddress, mobile) => {
+  const addUser = async (firstName, lastName, dob, gender, email, fullAddress, mobile,user_status) => {
+    console.log(firstName, lastName, dob, gender, email, fullAddress, mobile,user_status);
     try {
       const response = await axios.post('http://localhost:5000/api/users', { 
         first_name: firstName,
@@ -38,6 +39,7 @@ export const UserProvider = ({ children }) => {
         email,
         full_address: fullAddress,
         mobile,
+        user_status
       });
       setUsers((prevUsers) => [...prevUsers, response.data]);
     } catch (error) {
@@ -46,7 +48,7 @@ export const UserProvider = ({ children }) => {
   };
 
   // Update a user
-  const updateUser = async (id, firstName, lastName, dob, gender, email, fullAddress, mobile) => {
+  const updateUser = async (id, firstName, lastName, dob, gender, email, fullAddress, mobile,user_status) => {
     try {
       const response = await axios.put(`http://localhost:5000/api/users/${id}`, { 
         first_name: firstName,
@@ -56,6 +58,7 @@ export const UserProvider = ({ children }) => {
         email,
         full_address: fullAddress,
         mobile,
+        user_status
       });
       setUsers((prevUsers) =>
         prevUsers.map((user) => (user.id === id ? response.data : user))
