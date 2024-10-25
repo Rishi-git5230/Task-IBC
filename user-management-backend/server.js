@@ -30,7 +30,7 @@ db.connect(err => {
 // Get all active users
 app.get('/api/users', (req, res) => {
   db.query('SELECT * FROM users WHERE user_status != "Deleted"', (err, results) => {
-    if (err) return res.status(500).json(err);
+    if (err) return res.status(500).json({ message: 'Error fetching users', error: err });
     res.json(results);
   });
 });
@@ -38,7 +38,7 @@ app.get('/api/users', (req, res) => {
 // Get deleted users
 app.get('/api/deleted-users', (req, res) => {
   db.query('SELECT * FROM users WHERE user_status = "Deleted"', (err, results) => {
-    if (err) return res.status(500).json(err);
+    if (err) return res.status(500).json({ message: 'Error fetching deleted users', error: err });
     res.json(results);
   });
 });
@@ -46,31 +46,45 @@ app.get('/api/deleted-users', (req, res) => {
 // Add a new user
 app.post('/api/users', (req, res) => {
   const { first_name, last_name, dob, gender, email, full_address, mobile } = req.body;
-  
+  console.log(req.body);
   db.query(
     'INSERT INTO users (first_name, last_name, dob, gender, email, full_address, mobile, user_status) VALUES (?, ?, ?, ?, ?, ?, ?, "Active")',
     [first_name, last_name, dob, gender, email, full_address, mobile],
     (err, results) => {
       if (err) {
         console.error("Error inserting user:", err);
-        return res.status(500).json(err);
+        return res.status(500).json({ message: "Failed to add user", error: err });
       }
-      res.json({ id: results.insertId, first_name, last_name, dob, gender, email, full_address, mobile, user_status: "Active" });
+      res.json({
+        id: results.insertId,
+        first_name,
+        last_name,
+        dob,
+        gender,
+        email,
+        full_address,
+        mobile,
+        user_status: "Active"
+      });
     }
   );
 });
 
 // Update a user
 app.put('/api/users/:id', (req, res) => {
-  
-  const { id } = req.params;
+  const id = req.params.id; // Correctly get the id from params
   const { first_name, last_name, dob, gender, email, full_address, mobile, user_status } = req.body;
-  console.log(req.body);
+
+  console.log(req.body); // Log the request body for debugging
+
   db.query(
     'UPDATE users SET first_name = ?, last_name = ?, dob = ?, gender = ?, email = ?, full_address = ?, mobile = ?, user_status = ? WHERE id = ?',
     [first_name, last_name, dob, gender, email, full_address, mobile, user_status, id],
     (err) => {
-      if (err) return res.status(500).json(err);
+      if (err) {
+        console.error('Error updating user:', err);
+        return res.status(500).json({ message: 'Error updating user', error: err });
+      }
       res.json({ id, first_name, last_name, dob, gender, email, full_address, mobile, user_status });
     }
   );
@@ -80,7 +94,10 @@ app.put('/api/users/:id', (req, res) => {
 app.patch('/api/users/:id', (req, res) => {
   const { id } = req.params;
   db.query('UPDATE users SET user_status = "Deleted" WHERE id = ?', [id], (err) => {
-    if (err) return res.status(500).json(err);
+    if (err) {
+      console.error('Error deleting user:', err);
+      return res.status(500).json({ message: 'Error deleting user', error: err });
+    }
     res.json({ message: 'User deleted' });
   });
 });
@@ -89,7 +106,10 @@ app.patch('/api/users/:id', (req, res) => {
 app.patch('/api/users/enable/:id', (req, res) => {
   const { id } = req.params;
   db.query('UPDATE users SET user_status = "Active" WHERE id = ?', [id], (err) => {
-    if (err) return res.status(500).json(err);
+    if (err) {
+      console.error('Error enabling user:', err);
+      return res.status(500).json({ message: 'Error enabling user', error: err });
+    }
     res.json({ message: 'User enabled' });
   });
 });

@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Modal from 'react-modal';
 import UserForm from './UserForm';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 Modal.setAppElement('#root');
 
@@ -53,10 +55,10 @@ const UserTable = () => {
         }
     };
     
-
     return (
         <div>
-            <h2>User List</h2>
+            <h2 className="centered">User List</h2>
+
             {message && <div className="message">{message}</div>}
             <table>
                 <thead>
@@ -86,8 +88,16 @@ const UserTable = () => {
                             <td>{user.mobile}</td>
                             <td>{user.user_status}</td>
                             <td>
-                                <button onClick={() => handleOpenModal(user)}>Edit</button>
-                                <button onClick={() => handleDelete(user.id)}>Delete</button>
+                                <FontAwesomeIcon 
+                                    icon={faEdit} 
+                                    onClick={() => handleOpenModal(user)} 
+                                    style={{ cursor: 'pointer', marginRight: '10px' }} 
+                                />
+                                <FontAwesomeIcon 
+                                    icon={faTrash} 
+                                    onClick={() => handleDelete(user.id)} 
+                                    style={{ cursor: 'pointer', color: 'red' }} 
+                                />
                             </td>
                         </tr>
                     ))}

@@ -40,8 +40,8 @@ const DeletedUsers = () => {
 
     return (
         <div>
-            <h2>Deleted Users</h2>
-            <button onClick={handleBulkEnable} disabled={selectedUsers.length === 0}>
+            <h2 className="centered">Deleted Users</h2>
+            <button  class="button" onClick={handleBulkEnable} disabled={selectedUsers.length === 0}>
                 Enable Selected Users
             </button>
             <table>
