@@ -38,36 +38,37 @@ const UserForm = ({ user, onClose, onEdit }) => {
   }, [user]);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Create the user object without nesting
+    e.preventDefault(); // Prevent page refresh
+
     const userPayload = {
-      first_name: firstName,
-      last_name: lastName,
-      dob,
-      gender,
-      email,
-      full_address: fullAddress,
-      mobile,
-      user_status: userStatus,
+        first_name: firstName,
+        last_name: lastName,
+        dob,
+        gender,
+        email,
+        full_address: fullAddress,
+        mobile,
+        user_status: userStatus,
     };
-  
+
     try {
-      if (user) {
-        // Include ID only when updating
-        await updateUser(user.id, userPayload);
-        onEdit({ ...userPayload, id: user.id }); // Call onEdit with the updated user
-      } else {
-        await addUser(userPayload); // Call addUser when creating a new user
-        // Handle addition logic if needed
-      }
-      // Close the form after submission
-      onClose();
+        if (user) {
+            // Update existing user
+            await updateUser(user.id, userPayload);
+            onEdit({ ...userPayload, id: user.id });
+        } else {
+            // Add new user
+            await addUser(firstName, lastName, dob, gender, email, fullAddress, mobile, userStatus);
+            console.log('User added:', userPayload);
+        }
+
+        onClose(); // Close the form after submission
     } catch (error) {
-      console.error("Error saving user:", error);
-      // Optionally handle error state here (e.g., set error message in state)
+        console.error("Error saving user:", error);
     }
-  };
+};
+
+  
   
 
   return (

@@ -44,9 +44,13 @@ app.get('/api/deleted-users', (req, res) => {
 });
 
 // Add a new user
+// Add a new user
+// Add a new user
 app.post('/api/users', (req, res) => {
-  const { first_name, last_name, dob, gender, email, full_address, mobile } = req.body;
-  console.log(req.body);
+  const { first_name, last_name, dob, gender, email, full_address, mobile } = req.body; // Corrected
+
+  console.log(first_name, last_name, dob, gender, email, full_address, mobile);
+  
   db.query(
     'INSERT INTO users (first_name, last_name, dob, gender, email, full_address, mobile, user_status) VALUES (?, ?, ?, ?, ?, ?, ?, "Active")',
     [first_name, last_name, dob, gender, email, full_address, mobile],
@@ -69,6 +73,8 @@ app.post('/api/users', (req, res) => {
     }
   );
 });
+
+
 
 // Update a user
 app.put('/api/users/:id', (req, res) => {
