@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useUserContext } from '../context/UserContext';
 
 const UserForm = ({ user, onClose, onEdit }) => {
-  const { addUser, updateUser } = useUserContext();
+  const { addUser, updateUser, fetchUsers } = useUserContext(); // Get fetchUsers from context
   
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -11,8 +11,7 @@ const UserForm = ({ user, onClose, onEdit }) => {
   const [email, setEmail] = useState('');
   const [fullAddress, setFullAddress] = useState('');
   const [mobile, setMobile] = useState('');
-  const [userStatus, setUserStatus] = useState('Active'); // Default status
-
+  
   // Populate form fields if editing a user
   useEffect(() => {
     if (user) {
@@ -23,7 +22,6 @@ const UserForm = ({ user, onClose, onEdit }) => {
       setEmail(user.email);
       setFullAddress(user.full_address);
       setMobile(user.mobile);
-      setUserStatus(user.user_status); // Set user status for editing
     } else {
       // Reset form if not editing
       setFirstName('');
@@ -33,7 +31,6 @@ const UserForm = ({ user, onClose, onEdit }) => {
       setEmail('');
       setFullAddress('');
       setMobile('');
-      setUserStatus('Active');
     }
   }, [user]);
 
@@ -41,85 +38,112 @@ const UserForm = ({ user, onClose, onEdit }) => {
     e.preventDefault(); // Prevent page refresh
 
     const userPayload = {
-        first_name: firstName,
-        last_name: lastName,
-        dob,
-        gender,
-        email,
-        full_address: fullAddress,
-        mobile,
-        user_status: userStatus,
+      first_name: firstName,
+      last_name: lastName,
+      dob,
+      gender,
+      email,
+      full_address: fullAddress,
+      mobile,
     };
 
     try {
-        if (user) {
-            // Update existing user
-            await updateUser(user.id, userPayload);
-            onEdit({ ...userPayload, id: user.id });
-        } else {
-            // Add new user
-            await addUser(firstName, lastName, dob, gender, email, fullAddress, mobile, userStatus);
-            console.log('User added:', userPayload);
-        }
-
-        onClose(); // Close the form after submission
+      if (user) {
+        // Update existing user
+        await updateUser(user.id, userPayload);
+        onEdit({ ...userPayload, id: user.id });
+      } else {
+        // Add new user
+        await addUser(firstName, lastName, dob, gender, email, fullAddress, mobile);
+        console.log('User added:', userPayload);
+      }
+      // Fetch updated user list after adding or updating
+      fetchUsers();
+      // Close the form after submission
+      onClose();
     } catch (error) {
-        console.error("Error saving user:", error);
+      console.error("Error saving user:", error);
+      // Optionally display an error message
     }
-};
+  };
 
-  
-  
+  const handleDobChange = (e) => {
+    const selectedDate = new Date(e.target.value);
+    const today = new Date();
+    // Prevent selecting future dates
+    if (selectedDate > today) {
+      alert("You cannot select a future date.");
+      return;
+    }
+    setDob(e.target.value);
+  };
 
   return (
     <form onSubmit={handleSubmit}>
-      <input 
-        value={firstName} 
-        onChange={(e) => setFirstName(e.target.value)} 
-        placeholder="First Name" 
-        required 
-      />
-      <input 
-        value={lastName} 
-        onChange={(e) => setLastName(e.target.value)} 
-        placeholder="Last Name" 
-        required 
-      />
-      <input 
-        type="date" 
-        value={dob} 
-        onChange={(e) => setDob(e.target.value)} 
-        required 
-      />
-      <select value={gender} onChange={(e) => setGender(e.target.value)} required>
-        <option value="Male">Male</option>
-        <option value="Female">Female</option>
-        <option value="Other">Other</option>
-      </select>
-      <input 
-        value={email} 
-        onChange={(e) => setEmail(e.target.value)} 
-        placeholder="Email" 
-        required 
-      />
-      <textarea 
-        value={fullAddress} 
-        onChange={(e) => setFullAddress(e.target.value)} 
-        placeholder="Full Address" 
-        required 
-      />
-      <input 
-        value={mobile} 
-        onChange={(e) => setMobile(e.target.value)} 
-        placeholder="Mobile" 
-        required 
-      />
-      
-      {/* User Status Select */}
-      <select value={userStatus} onChange={(e) => setUserStatus(e.target.value)} required>
-        <option value="Active">Active</option>
-        <option value="Inactive">Inactive</option>
-      </select>
+      <div>
+        <label>First Name</label>
+        <input 
+          value={firstName} 
+          onChange={(e) => setFirstName(e.target.value)} 
+          placeholder="First Name" 
+          required 
+        />
+      </div>
+      <div>
+        <label>Last Name</label>
+        <input 
+          value={lastName} 
+          onChange={(e) => setLastName(e.target.value)} 
+          placeholder="Last Name" 
+          required 
+        />
+      </div>
+      <div>
+        <label>Date of Birth</label>
+        <input 
+          type="date" 
+          value={dob} 
+          onChange={handleDobChange} 
+          required 
+        />
+      </div>
+      <div>
+        <label>Gender</label>
+        <select value={gender} onChange={(e) => setGender(e.target.value)} required>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div>
+        <label>Email</label>
+        <input 
+          type="email" 
+          value={email} 
+          onChange={(e) => setEmail(e.target.value)} 
+          placeholder="Email" 
+          required 
+        />
+      </div>
+      <div>
+        <label>Full Address</label>
+        <textarea 
+          value={fullAddress} 
+          onChange={(e) => setFullAddress(e.target.value)} 
+          placeholder="Full Address" 
+          required 
+        />
+      </div>
+      <div>
+        <label>Mobile</label>
+        <input 
+          type="tel" 
+          value={mobile} 
+          onChange={(e) => setMobile(e.target.value)} 
+          placeholder="Mobile" 
+          required 
+        />
+      </div>
 
       <button type="submit">Submit</button>
       <button type="button" onClick={onClose}>Cancel</button>

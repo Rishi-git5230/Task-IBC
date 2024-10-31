@@ -39,7 +39,13 @@ const SearchUser = () => {
 
         const results = allUsers.filter(user => 
             user.first_name.toLowerCase().includes(query.toLowerCase()) ||
-            user.last_name.toLowerCase().includes(query.toLowerCase())
+            user.last_name.toLowerCase().includes(query.toLowerCase()) ||
+            user.dob.toLowerCase().includes(query.toLowerCase()) ||  // Search by Date of Birth
+            user.gender.toLowerCase().includes(query.toLowerCase()) ||  // Search by Gender
+            user.email.toLowerCase().includes(query.toLowerCase()) ||  // Search by Email
+            user.full_address.toLowerCase().includes(query.toLowerCase()) ||  // Search by Address
+            user.mobile.toLowerCase().includes(query.toLowerCase()) ||  // Search by Mobile
+            user.user_status.toLowerCase().includes(query.toLowerCase())  // Search by User Status
         );
         setFilteredResults(results);
     }, [query, allUsers]);
@@ -50,12 +56,15 @@ const SearchUser = () => {
     };
 
     const handleDelete = async (id) => {
-        try {
-            await axios.patch(`http://localhost:5000/api/users/${id}`); // Assuming this endpoint deletes the user
-            setFilteredResults(filteredResults.filter(user => user.id !== id)); // Update the state after deletion
-        } catch (error) {
-            console.error("Error deleting user:", error);
-            setError('Failed to delete user');
+        const confirmed = window.confirm('Are you sure you want to delete this user?');
+        if (confirmed) {
+            try {
+                await axios.patch(`http://localhost:5000/api/users/${id}`); // Assuming this endpoint deletes the user
+                setFilteredResults(filteredResults.filter(user => user.id !== id)); // Update the state after deletion
+            } catch (error) {
+                console.error("Error deleting user:", error);
+                setError('Failed to delete user');
+            }
         }
     };
 
@@ -64,7 +73,7 @@ const SearchUser = () => {
             <h2>Search User</h2>
             <input
                 type="text"
-                placeholder="Search by First Name or Last Name"
+                placeholder="Search by First Name, Last Name, or other fields"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 style={{ width: '300px', padding: '8px', marginBottom: '10px' }}

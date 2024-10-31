@@ -1,20 +1,22 @@
+// ... other imports
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Modal from 'react-modal';
 import UserForm from './UserForm';
-import ConfirmationModal from './ConfirmationModal'; // Import the new modal
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 Modal.setAppElement('#root');
 
 const UserTable = () => {
+    // ... other state variables
     const [users, setUsers] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false); // State for confirmation modal
     const [currentUser, setCurrentUser] = useState(null);
     const [selectedUsers, setSelectedUsers] = useState(new Set());
     const [message, setMessage] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const entriesPerPage = 50;
 
     useEffect(() => {
         fetchUsers();
@@ -26,6 +28,7 @@ const UserTable = () => {
             setUsers(response.data);
         } catch (error) {
             console.error("Error fetching users:", error);
+            setMessage('Failed to fetch users');
         }
     };
 
@@ -38,13 +41,10 @@ const UserTable = () => {
         setIsModalOpen(false);
         setCurrentUser(null);
         setMessage('');
+        fetchUsers();
     };
 
-    const handleEdit = (updatedUser) => {
-        const updatedUsers = users.map((user) => 
-            user.id === updatedUser.id ? updatedUser : user
-        );
-        setUsers(updatedUsers);
+    const handleEdit = async (updatedUser) => {
         handleCloseModal();
     };
 
@@ -59,7 +59,10 @@ const UserTable = () => {
     };
 
     const handleDeleteSelected = () => {
-        setIsConfirmModalOpen(true); // Open confirmation modal
+        const confirmed = window.confirm('Are you sure you want to delete the selected users?');
+        if (confirmed) {
+            confirmDelete();
+        }
     };
 
     const confirmDelete = async () => {
@@ -67,34 +70,44 @@ const UserTable = () => {
             await Promise.all(Array.from(selectedUsers).map(id => 
                 axios.patch(`http://localhost:5000/api/users/${id}`)
             ));
-            setUsers(users.filter(user => !selectedUsers.has(user.id)));
-            setSelectedUsers(new Set()); // Reset selection
+            setSelectedUsers(new Set());
+            fetchUsers();
         } catch (error) {
             console.error("Error deleting users:", error);
             setMessage('Failed to delete users');
-        } finally {
-            setIsConfirmModalOpen(false); // Close confirmation modal
         }
     };
 
     const handleDelete = async (id) => {
-        try {
-            await axios.patch(`http://localhost:5000/api/users/${id}`);
-            setUsers(users.filter(user => user.id !== id));
-        } catch (error) {
-            console.error("Error deleting user:", error);
-            setMessage('Failed to delete user');
+        const confirmed = window.confirm('Are you sure you want to delete this user?');
+        if (confirmed) {
+            try {
+                await axios.patch(`http://localhost:5000/api/users/${id}`);
+                fetchUsers();
+            } catch (error) {
+                console.error("Error deleting user:", error);
+                setMessage('Failed to delete user');
+            }
         }
     };
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
         const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+        const month = String(date.getMonth() + 1).padStart(2, '0');
         const year = date.getFullYear();
         return `${day}-${month}-${year}`;
     };
-    
+
+    const totalEntries = users.length;
+    const totalPages = Math.ceil(totalEntries / entriesPerPage);
+    const startIndex = (currentPage - 1) * entriesPerPage;
+    const currentUsers = users.slice(startIndex, startIndex + entriesPerPage);
+
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+    };
+
     return (
         <div>
             <h2 className="centered">User List</h2>
@@ -120,7 +133,7 @@ const UserTable = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {users.map((user) => (
+                    {currentUsers.map((user) => (
                         <tr key={user.id}>
                             <td>
                                 <input 
@@ -155,19 +168,45 @@ const UserTable = () => {
                 </tbody>
             </table>
 
+            {/* Pagination Controls */}
+            <div className="pagination" style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+                <button 
+                    onClick={() => handlePageChange(currentPage - 1)} 
+                    disabled={currentPage === 1}
+                    style={{ backgroundColor: '#007bff', color: 'white', margin: '0 5px', padding: '10px', border: 'none', borderRadius: '5px' }}
+                >
+                    Previous
+                </button>
+                {Array.from({ length: totalPages }, (_, index) => (
+                    <button 
+                        key={index + 1} 
+                        onClick={() => handlePageChange(index + 1)} 
+                        className={currentPage === index + 1 ? 'active' : ''}
+                        style={{ backgroundColor: '#007bff', color: 'white', margin: '0 5px', padding: '10px', border: 'none', borderRadius: '5px' }}
+                    >
+                        {index + 1}
+                    </button>
+                ))}
+                <button 
+                    onClick={() => handlePageChange(currentPage + 1)} 
+                    disabled={currentPage === totalPages}
+                    style={{ backgroundColor: '#007bff', color: 'white', margin: '0 5px', padding: '10px', border: 'none', borderRadius: '5px' }}
+                >
+                    Next
+                </button>
+            </div>
+
             <Modal
                 isOpen={isModalOpen}
                 onRequestClose={handleCloseModal}
                 contentLabel="User Form"
             >
-                <UserForm user={currentUser} onClose={handleCloseModal} onEdit={handleEdit} />
+                <UserForm 
+                    user={currentUser} 
+                    onClose={handleCloseModal} 
+                    onEdit={handleEdit} 
+                />
             </Modal>
-
-            <ConfirmationModal
-                isOpen={isConfirmModalOpen}
-                onClose={() => setIsConfirmModalOpen(false)}
-                onConfirm={confirmDelete}
-            />
         </div>
     );
 };

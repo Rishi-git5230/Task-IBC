@@ -26,6 +26,7 @@ export const UserProvider = ({ children }) => {
   const fetchUsers = async () => {
     try {
       const response = await axiosInstance.get('/users');
+      console.log("fetchUsers func was called")
       setUsers(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -64,6 +65,7 @@ export const UserProvider = ({ children }) => {
 
     try {
       const response = await axiosInstance.post('/users', userData);
+      console.log(response.data)
       setUsers(prevUsers => [...prevUsers, response.data]);
     } catch (error) {
       console.error('Error adding user:', error);
@@ -82,6 +84,7 @@ export const UserProvider = ({ children }) => {
       users,
       deletedUsers,
       addUser,
+      fetchUsers
       // Other context values...
     }}>
       {children}

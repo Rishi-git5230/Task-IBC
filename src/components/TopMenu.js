@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import UserForm from './UserForm'; // Adjust the import path as needed
 
 const TopMenu = () => {
+    const navigate = useNavigate(); // Use the useNavigate hook
     const [isModalOpen, setIsModalOpen] = useState(false); // State to manage modal visibility
 
     const handleAddUserClick = () => {
@@ -11,6 +12,11 @@ const TopMenu = () => {
 
     const closeModal = () => {
         setIsModalOpen(false); // Close the modal
+    };
+
+    const handleLogout = () => {
+        // Perform any logout logic here, if needed (e.g., clearing tokens)
+        navigate('/login'); // Redirect to the login page
     };
 
     return (
@@ -23,7 +29,7 @@ const TopMenu = () => {
                         <button onClick={handleAddUserClick}>Add New User</button>
                     </li>
                     <li><Link to="/deleted-users"><button>Deleted Users</button></Link></li>
-                    <li><Link to="/login"><button>Logout</button></Link></li> {/* Logout button */}
+                    <li><button onClick={handleLogout}>Logout</button></li>
                 </ul>
             </nav>
 
