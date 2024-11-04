@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useUserContext } from '../context/UserContext';
-//import { fetchUsers } from './UserTable';
-
 
 const UserForm = ({ user, onClose, onEdit }) => {
-  const { addUser, updateUser,fetchUsers } = useUserContext(); // Get fetchUsers from context
-  
+  const { addUser, updateUser, fetchUsers } = useUserContext();
+
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [dob, setDob] = useState('');
@@ -13,10 +11,8 @@ const UserForm = ({ user, onClose, onEdit }) => {
   const [email, setEmail] = useState('');
   const [fullAddress, setFullAddress] = useState('');
   const [mobile, setMobile] = useState('');
+  const [countryCode, setCountryCode] = useState('+91');
 
-  
-  
-  // Populate form fields if editing a user
   useEffect(() => {
     if (user) {
       setFirstName(user.first_name);
@@ -25,9 +21,9 @@ const UserForm = ({ user, onClose, onEdit }) => {
       setGender(user.gender);
       setEmail(user.email);
       setFullAddress(user.full_address);
-      setMobile(user.mobile);
+      setMobile(user.mobile.replace(/^\+\d+/, '')); // Remove country code for display
+      setCountryCode('+91'); // Default country code
     } else {
-      // Reset form if not editing
       setFirstName('');
       setLastName('');
       setDob('');
@@ -35,11 +31,16 @@ const UserForm = ({ user, onClose, onEdit }) => {
       setEmail('');
       setFullAddress('');
       setMobile('');
+      setCountryCode('+91');
     }
   }, [user]);
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Prevent page refresh
+    e.preventDefault();
+
+    if (!validateInputs()) {
+      return;
+    }
 
     const userPayload = {
       first_name: firstName,
@@ -48,38 +49,72 @@ const UserForm = ({ user, onClose, onEdit }) => {
       gender,
       email,
       full_address: fullAddress,
-      mobile,
+      mobile: `${countryCode}${mobile}`, // Combine country code with mobile
     };
 
     try {
       if (user) {
-        // Update existing user
         await updateUser(user.id, userPayload);
         onEdit({ ...userPayload, id: user.id });
       } else {
-        // Add new user
         await addUser(firstName, lastName, dob, gender, email, fullAddress, mobile);
         console.log('User added:', userPayload);
       }
-      // Fetch updated user list after adding or updating
       fetchUsers();
-      // Close the form after submission
       onClose();
     } catch (error) {
       console.error("Error saving user:", error);
-      // Optionally display an error message
     }
+  };
+
+  const validateInputs = () => {
+    const nameRegex = /^[A-Za-z\s]+$/; // Allow alphabets and spaces
+    const mobileRegex = /^\d{10}$/;
+
+    if (!nameRegex.test(firstName) || firstName.length > 50) {
+      alert("First Name must contain only alphabets and spaces and be less than 50 characters.");
+      return false;
+    }
+
+    if (!nameRegex.test(lastName) || lastName.length > 50) {
+      alert("Last Name must contain only alphabets and spaces and be less than 50 characters.");
+      return false;
+    }
+
+    // Validate that the email contains "@" character
+    if (!email.includes('@')) {
+      alert("Email must contain '@'.");
+      return false;
+    }
+
+    if (fullAddress.length > 100) {
+      alert("Full Address must be less than 100 characters.");
+      return false;
+    }
+
+    if (!mobileRegex.test(mobile)) {
+      alert("Mobile number must contain exactly 10 digits.");
+      return false;
+    }
+
+    return true;
   };
 
   const handleDobChange = (e) => {
     const selectedDate = new Date(e.target.value);
     const today = new Date();
-    // Prevent selecting future dates
     if (selectedDate > today) {
       alert("You cannot select a future date.");
       return;
     }
     setDob(e.target.value);
+  };
+
+  const handleMobileChange = (e) => {
+    const input = e.target.value.replace(/[^0-9]/g, ''); // Allow only numbers
+    if (input.length <= 10) { // Allow a maximum of 10 digits
+      setMobile(input);
+    }
   };
 
   return (
@@ -140,10 +175,16 @@ const UserForm = ({ user, onClose, onEdit }) => {
       </div>
       <div>
         <label>Mobile</label>
+        <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)}>
+          <option value="+91">+91 (India)</option>
+          <option value="+1">+1 (USA)</option>
+          <option value="+44">+44 (UK)</option>
+          {/* Add more country codes as needed */}
+        </select>
         <input 
           type="tel" 
           value={mobile} 
-          onChange={(e) => setMobile(e.target.value)} 
+          onChange={handleMobileChange} 
           placeholder="Mobile" 
           required 
         />
