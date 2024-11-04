@@ -1,16 +1,14 @@
-// ... other imports
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import Modal from 'react-modal';
 import UserForm from './UserForm';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
-
+import { useUserContext } from '../context/UserContext';
+import axios from 'axios';
 Modal.setAppElement('#root');
 
 const UserTable = () => {
-    // ... other state variables
-    const [users, setUsers] = useState([]);
+    const { users, fetchUsers } = useUserContext(); // Get users from context
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
     const [selectedUsers, setSelectedUsers] = useState(new Set());
@@ -19,18 +17,8 @@ const UserTable = () => {
     const entriesPerPage = 50;
 
     useEffect(() => {
-        fetchUsers();
-    }, []);
-
-    const fetchUsers = async () => {
-        try {
-            const response = await axios.get('http://localhost:5000/api/users');
-            setUsers(response.data);
-        } catch (error) {
-            console.error("Error fetching users:", error);
-            setMessage('Failed to fetch users');
-        }
-    };
+        fetchUsers(); // Fetch users when the component mounts
+    }, [fetchUsers]);
 
     const handleOpenModal = (user = null) => {
         setCurrentUser(user);
@@ -41,9 +29,8 @@ const UserTable = () => {
         setIsModalOpen(false);
         setCurrentUser(null);
         setMessage('');
-        fetchUsers();
+        fetchUsers(); // Refresh users after closing modal
     };
-
     const handleEdit = async (updatedUser) => {
         handleCloseModal();
     };
@@ -58,10 +45,10 @@ const UserTable = () => {
         setSelectedUsers(updatedSelection);
     };
 
-    const handleDeleteSelected = () => {
+    const handleDeleteSelected = async () => {
         const confirmed = window.confirm('Are you sure you want to delete the selected users?');
         if (confirmed) {
-            confirmDelete();
+            await confirmDelete();
         }
     };
 
@@ -71,7 +58,7 @@ const UserTable = () => {
                 axios.patch(`http://localhost:5000/api/users/${id}`)
             ));
             setSelectedUsers(new Set());
-            fetchUsers();
+            fetchUsers(); // Refresh the user list
         } catch (error) {
             console.error("Error deleting users:", error);
             setMessage('Failed to delete users');
@@ -83,7 +70,7 @@ const UserTable = () => {
         if (confirmed) {
             try {
                 await axios.patch(`http://localhost:5000/api/users/${id}`);
-                fetchUsers();
+                fetchUsers(); // Refresh the user list
             } catch (error) {
                 console.error("Error deleting user:", error);
                 setMessage('Failed to delete user');

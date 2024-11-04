@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import axios from 'axios';
 
 // Create an Axios instance
@@ -13,7 +13,7 @@ axiosInstance.interceptors.request.use(request => {
     url: request.url,
     data: request.data,
   });
-  return request; // Important: Return the request object to continue the request
+  return request;
 });
 
 const UserContext = createContext();
@@ -23,25 +23,25 @@ export const UserProvider = ({ children }) => {
   const [deletedUsers, setDeletedUsers] = useState([]);
 
   // Fetch users from API
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const response = await axiosInstance.get('/users');
-      console.log("fetchUsers func was called")
+      console.log("fetchUsers func was called");
       setUsers(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
     }
-  };
+  }, []); // Dependency array is empty, function reference won't change
 
   // Fetch deleted users from API
-  const fetchDeletedUsers = async () => {
+  const fetchDeletedUsers = useCallback(async () => {
     try {
       const response = await axiosInstance.get('/deleted-users');
       setDeletedUsers(response.data);
     } catch (error) {
       console.error('Error fetching deleted users:', error);
     }
-  };
+  }, []); // Also memoize this function
 
   // Add a new user
   const addUser = async (firstName, lastName, dob, gender, email, fullAddress, mobile, userStatus) => {
@@ -65,27 +65,24 @@ export const UserProvider = ({ children }) => {
 
     try {
       const response = await axiosInstance.post('/users', userData);
-      console.log(response.data)
-      setUsers(prevUsers => [...prevUsers, response.data]);
+      console.log(response.data);
+      setUsers(users => [...users, response.data]);
     } catch (error) {
       console.error('Error adding user:', error);
     }
   };
 
-  // Other functions (updateUser, deleteUser, etc.) go here...
-
   useEffect(() => {
     fetchUsers();
     fetchDeletedUsers();
-  }, []);
+  }, [fetchUsers, fetchDeletedUsers]); // Now the effect will only run once
 
   return (
     <UserContext.Provider value={{
       users,
       deletedUsers,
       addUser,
-      fetchUsers
-      // Other context values...
+      fetchUsers, // Provide the memoized function
     }}>
       {children}
     </UserContext.Provider>

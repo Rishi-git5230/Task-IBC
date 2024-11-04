@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useUserContext } from '../context/UserContext';
+//import { fetchUsers } from './UserTable';
+
 
 const UserForm = ({ user, onClose, onEdit }) => {
-  const { addUser, updateUser, fetchUsers } = useUserContext(); // Get fetchUsers from context
+  const { addUser, updateUser,fetchUsers } = useUserContext(); // Get fetchUsers from context
   
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -11,6 +13,8 @@ const UserForm = ({ user, onClose, onEdit }) => {
   const [email, setEmail] = useState('');
   const [fullAddress, setFullAddress] = useState('');
   const [mobile, setMobile] = useState('');
+
+  
   
   // Populate form fields if editing a user
   useEffect(() => {
