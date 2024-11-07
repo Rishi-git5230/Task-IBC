@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import UserForm from './UserForm'; // Adjust the import path as needed
 
-const TopMenu = () => {
+const TopMenu = ({ onLogout }) => {  // Accept onLogout prop
     const navigate = useNavigate(); // Use the useNavigate hook
     const [isModalOpen, setIsModalOpen] = useState(false); // State to manage modal visibility
 
@@ -15,7 +15,8 @@ const TopMenu = () => {
     };
 
     const handleLogout = () => {
-        // Perform any logout logic here, if needed (e.g., clearing tokens)
+        // Call the onLogout function passed from the parent (App.js)
+        onLogout();
         navigate('/login'); // Redirect to the login page
     };
 
@@ -34,8 +35,8 @@ const TopMenu = () => {
             </nav>
 
             {isModalOpen && (
-                <div className="modal">
-                    <div className="modal-content">
+                <div className="Overlay">
+                    <div className="Modal__Content">
                         <span className="close" onClick={closeModal}>&times;</span>
                         <h2>Add New User</h2>
                         <UserForm onClose={closeModal} />

@@ -20,18 +20,34 @@ const App = () => {
     setIsLoggedIn(true);
   };
 
+  const handleLogout = () => {
+    setIsLoggedIn(false); // This will hide the TopMenu
+  };
+
   return (
     <UserProvider>
       <Router>
         {/* Only show the TopMenu if logged in */}
-        {isLoggedIn && <TopMenu />}
+        {isLoggedIn && <TopMenu onLogout={handleLogout} />}
         
         <Routes>
           <Route path="/login" element={<Login onLogin={handleLogin} />} />
-          <Route path="/" element={isLoggedIn ? <UserTable /> : <Navigate to="/login" />} />
-          <Route path="/add-user" element={isLoggedIn ? <UserForm /> : <Navigate to="/login" />} />
-          <Route path="/deleted-users" element={isLoggedIn ? <DeletedUsers /> : <Navigate to="/login" />} />
-          <Route path="/search" element={isLoggedIn ? <SearchUser /> : <Navigate to="/login" />} />
+          <Route
+            path="/"
+            element={isLoggedIn ? <UserTable /> : <Navigate to="/login" replace />}
+          />
+          <Route
+            path="/add-user"
+            element={isLoggedIn ? <UserForm /> : <Navigate to="/login" replace />}
+          />
+          <Route
+            path="/deleted-users"
+            element={isLoggedIn ? <DeletedUsers /> : <Navigate to="/login" replace />}
+          />
+          <Route
+            path="/search"
+            element={isLoggedIn ? <SearchUser /> : <Navigate to="/login" replace />}
+          />
         </Routes>
       </Router>
     </UserProvider>

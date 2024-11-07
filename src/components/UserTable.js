@@ -14,7 +14,9 @@ const UserTable = () => {
     const [selectedUsers, setSelectedUsers] = useState(new Set());
     const [message, setMessage] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
-    const entriesPerPage = 50;
+    const [showDeleteModal, setShowDeleteModal] = useState(false); // State for the delete confirmation modal
+    const [messageDelete, setMessageDelete] = useState(''); // State for delete error or success message
+    const entriesPerPage = 10;
 
     useEffect(() => {
         fetchUsers(); // Fetch users when the component mounts
@@ -31,6 +33,7 @@ const UserTable = () => {
         setMessage('');
         fetchUsers(); // Refresh users after closing modal
     };
+
     const handleEdit = async (updatedUser) => {
         handleCloseModal();
     };
@@ -45,37 +48,30 @@ const UserTable = () => {
         setSelectedUsers(updatedSelection);
     };
 
-    const handleDeleteSelected = async () => {
-        const confirmed = window.confirm('Are you sure you want to delete the selected users?');
-        if (confirmed) {
-            await confirmDelete();
+    const handleDeleteSelected = () => {
+        if (selectedUsers.size > 0) {
+            setShowDeleteModal(true); // Show the confirmation modal
         }
     };
 
     const confirmDelete = async () => {
         try {
-            await Promise.all(Array.from(selectedUsers).map(id => 
-                axios.patch(`http://localhost:5000/api/users/${id}`)
+            // Convert selected users Set to array and delete them one by one
+            await Promise.all(Array.from(selectedUsers).map((userId) => 
+                axios.patch(`http://localhost:5000/api/users/${userId}`)
             ));
-            setSelectedUsers(new Set());
+            setSelectedUsers(new Set()); // Reset selected users
+            setShowDeleteModal(false); // Close the modal
             fetchUsers(); // Refresh the user list
         } catch (error) {
             console.error("Error deleting users:", error);
-            setMessage('Failed to delete users');
+            setMessageDelete('Failed to delete users');
         }
     };
 
-    const handleDelete = async (id) => {
-        const confirmed = window.confirm('Are you sure you want to delete this user?');
-        if (confirmed) {
-            try {
-                await axios.patch(`http://localhost:5000/api/users/${id}`);
-                fetchUsers(); // Refresh the user list
-            } catch (error) {
-                console.error("Error deleting user:", error);
-                setMessage('Failed to delete user');
-            }
-        }
+    const handleDelete = (userId) => {
+        setSelectedUsers(new Set([userId])); // Set selected user to the one being deleted
+        setShowDeleteModal(true); // Show the confirmation modal
     };
 
     const formatDate = (dateString) => {
@@ -100,9 +96,12 @@ const UserTable = () => {
             <h2 className="centered">User List</h2>
 
             {message && <div className="message">{message}</div>}
+            {messageDelete && <div className="message">{messageDelete}</div>}
+
             <button className="button" onClick={handleDeleteSelected} disabled={selectedUsers.size === 0}>
                 Delete Selected
             </button>
+
             <table>
                 <thead>
                     <tr>
@@ -146,7 +145,7 @@ const UserTable = () => {
                                 />
                                 <FontAwesomeIcon 
                                     icon={faTrash} 
-                                    onClick={() => handleDelete(user.id)} 
+                                    onClick={() => handleDelete(user.id)} // Open confirmation modal for individual delete
                                     style={{ cursor: 'pointer', color: 'red' }} 
                                 />
                             </td>
@@ -182,6 +181,33 @@ const UserTable = () => {
                     Next
                 </button>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            <Modal
+                isOpen={showDeleteModal}
+                onRequestClose={() => setShowDeleteModal(false)}
+                contentLabel="Delete Confirmation"
+                className="Modal__Content"
+                overlayClassName="Overlay"
+            >
+                <div className="Modal__Header">
+                    Are you sure you want to delete the selected user(s)?
+                </div>
+                <div className="Modal__Buttons">
+                    <button 
+                        onClick={confirmDelete} 
+                        className="Modal__Button Modal__Button--Confirm"
+                    >
+                        Confirm
+                    </button>
+                    <button 
+                        onClick={() => setShowDeleteModal(false)} 
+                        className="Modal__Button Modal__Button--Cancel"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </Modal>
 
             <Modal
                 isOpen={isModalOpen}
