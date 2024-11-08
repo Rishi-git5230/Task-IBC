@@ -7,18 +7,28 @@ const UserForm = ({ user, onClose, onEdit }) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [dob, setDob] = useState('');
-  const [gender, setGender] = useState('Male');
+  const [gender, setGender] = useState('None'); // Default gender is set to 'None'
   const [email, setEmail] = useState('');
   const [fullAddress, setFullAddress] = useState('');
   const [mobile, setMobile] = useState('');
   const [countryCode, setCountryCode] = useState('+91');
+  
+  const [errors, setErrors] = useState({
+    firstName: '',
+    lastName: '',
+    dob: '',
+    gender: '',
+    email: '',
+    fullAddress: '',
+    mobile: ''
+  });
 
   useEffect(() => {
     if (user) {
       setFirstName(user.first_name);
       setLastName(user.last_name);
       setDob(user.dob);
-      setGender(user.gender);
+      setGender(user.gender || 'None'); // Ensure user data sets the gender correctly
       setEmail(user.email);
       setFullAddress(user.full_address);
       setMobile(user.mobile.replace(/^\+\d+/, '')); // Remove country code for display
@@ -27,7 +37,7 @@ const UserForm = ({ user, onClose, onEdit }) => {
       setFirstName('');
       setLastName('');
       setDob('');
-      setGender('Male');
+      setGender('None'); // Default gender is 'None'
       setEmail('');
       setFullAddress('');
       setMobile('');
@@ -70,44 +80,89 @@ const UserForm = ({ user, onClose, onEdit }) => {
   const validateInputs = () => {
     const nameRegex = /^[A-Za-z\s]+$/; // Allow alphabets and spaces
     const mobileRegex = /^\d{10}$/;
+    let valid = true;
+    let newErrors = {};
 
-    if (!nameRegex.test(firstName) || firstName.length > 50) {
-      alert("First Name must contain only alphabets and spaces and be less than 50 characters.");
-      return false;
+    // First Name Validation
+    if (!firstName) {
+      newErrors.firstName = 'First Name is required.';
+      valid = false;
+    } else if (!nameRegex.test(firstName)) {
+      newErrors.firstName = 'First Name must contain only alphabets and spaces.';
+      valid = false;
+    } else if (firstName.length > 50) {
+      newErrors.firstName = 'First Name must be less than or equal to 50 characters.';
+      valid = false;
     }
 
-    if (!nameRegex.test(lastName) || lastName.length > 50) {
-      alert("Last Name must contain only alphabets and spaces and be less than 50 characters.");
-      return false;
+    // Last Name Validation
+    if (!lastName) {
+      newErrors.lastName = 'Last Name is required.';
+      valid = false;
+    } else if (!nameRegex.test(lastName)) {
+      newErrors.lastName = 'Last Name must contain only alphabets and spaces.';
+      valid = false;
+    } else if (lastName.length > 50) {
+      newErrors.lastName = 'Last Name must be less than or equal to 50 characters.';
+      valid = false;
     }
 
-    // Validate that the email contains "@" character
-    if (!email.includes('@')) {
-      alert("Email must contain '@'.");
-      return false;
+    // Date of Birth Validation
+    if (!dob) {
+      newErrors.dob = 'Date of Birth is required.';
+      valid = false;
+    } else {
+      const selectedDate = new Date(dob);
+      const today = new Date();
+      if (selectedDate > today) {
+        newErrors.dob = 'You cannot select a future date.';
+        valid = false;
+      }
     }
 
-    if (fullAddress.length > 100) {
-      alert("Full Address must be less than 100 characters.");
-      return false;
+    // Gender Validation
+    if (gender === 'None') {
+      newErrors.gender = 'Gender is required.';
+      valid = false;
     }
 
+    // Email Validation
+    if (!email) {
+      newErrors.email = 'Email is required.';
+      valid = false;
+    } else if (!email.includes('@')) {
+      newErrors.email = 'Valid email is required.';
+      valid = false;
+    }
+
+    // Full Address Validation
+    if (!fullAddress) {
+      newErrors.fullAddress = 'Full Address is required.';
+      valid = false;
+    } else if (fullAddress.length > 100) {
+      newErrors.fullAddress = 'Full Address must be less than 100 characters.';
+      valid = false;
+    }
+
+    // Mobile Validation
     if (!mobileRegex.test(mobile)) {
-      alert("Mobile number must contain exactly 10 digits.");
-      return false;
+      newErrors.mobile = 'Mobile number must contain exactly 10 digits.';
+      valid = false;
     }
 
-    return true;
+    setErrors(newErrors);
+    return valid;
   };
 
   const handleDobChange = (e) => {
     const selectedDate = new Date(e.target.value);
     const today = new Date();
     if (selectedDate > today) {
-      alert("You cannot select a future date.");
-      return;
+      setErrors((prev) => ({ ...prev, dob: "You cannot select a future date." }));
+    } else {
+      setDob(e.target.value);
+      setErrors((prev) => ({ ...prev, dob: '' }));
     }
-    setDob(e.target.value);
   };
 
   const handleMobileChange = (e) => {
@@ -125,35 +180,44 @@ const UserForm = ({ user, onClose, onEdit }) => {
           value={firstName} 
           onChange={(e) => setFirstName(e.target.value)} 
           placeholder="First Name" 
-          required 
+          style={{ borderColor: errors.firstName ? 'red' : '' }}
         />
+        {errors.firstName && <p style={{ color: 'red' }}>{errors.firstName}</p>}
       </div>
+      
       <div>
         <label>Last Name</label>
         <input 
           value={lastName} 
           onChange={(e) => setLastName(e.target.value)} 
           placeholder="Last Name" 
-          required 
+          style={{ borderColor: errors.lastName ? 'red' : '' }}
         />
+        {errors.lastName && <p style={{ color: 'red' }}>{errors.lastName}</p>}
       </div>
+
       <div>
         <label>Date of Birth</label>
         <input 
           type="date" 
           value={dob} 
           onChange={handleDobChange} 
-          required 
+          style={{ borderColor: errors.dob ? 'red' : '' }}
         />
+        {errors.dob && <p style={{ color: 'red' }}>{errors.dob}</p>}
       </div>
+
       <div>
         <label>Gender</label>
-        <select value={gender} onChange={(e) => setGender(e.target.value)} required>
+        <select value={gender} onChange={(e) => setGender(e.target.value)}>
+          <option value="None">None</option>
           <option value="Male">Male</option>
           <option value="Female">Female</option>
           <option value="Other">Other</option>
         </select>
+        {errors.gender && <p style={{ color: 'red' }}>{errors.gender}</p>}
       </div>
+
       <div>
         <label>Email</label>
         <input 
@@ -161,18 +225,22 @@ const UserForm = ({ user, onClose, onEdit }) => {
           value={email} 
           onChange={(e) => setEmail(e.target.value)} 
           placeholder="Email" 
-          required 
+          style={{ borderColor: errors.email ? 'red' : '' }}
         />
+        {errors.email && <p style={{ color: 'red' }}>{errors.email}</p>}
       </div>
+
       <div>
         <label>Full Address</label>
         <textarea 
           value={fullAddress} 
           onChange={(e) => setFullAddress(e.target.value)} 
           placeholder="Full Address" 
-          required 
+          style={{ borderColor: errors.fullAddress ? 'red' : '' }}
         />
+        {errors.fullAddress && <p style={{ color: 'red' }}>{errors.fullAddress}</p>}
       </div>
+
       <div>
         <label>Mobile</label>
         <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)}>
@@ -186,8 +254,9 @@ const UserForm = ({ user, onClose, onEdit }) => {
           value={mobile} 
           onChange={handleMobileChange} 
           placeholder="Mobile" 
-          required 
+          style={{ borderColor: errors.mobile ? 'red' : '' }}
         />
+        {errors.mobile && <p style={{ color: 'red' }}>{errors.mobile}</p>}
       </div>
 
       <button type="submit">Submit</button>
@@ -197,3 +266,6 @@ const UserForm = ({ user, onClose, onEdit }) => {
 };
 
 export default UserForm;
+
+
+

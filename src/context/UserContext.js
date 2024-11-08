@@ -49,7 +49,7 @@ export const UserProvider = ({ children }) => {
       console.error('All fields must be filled out');
       return;
     }
-
+  
     const userData = {
       first_name: firstName,
       last_name: lastName,
@@ -60,17 +60,21 @@ export const UserProvider = ({ children }) => {
       mobile,
       user_status: userStatus || "Active",
     };
-
+  
     console.log('User data being sent:', userData);
-
+  
     try {
       const response = await axiosInstance.post('/users', userData);
       console.log(response.data);
-      setUsers(users => [...users, response.data]);
+  
+      // Return the newly added user instead of updating context state directly
+      return response.data;
     } catch (error) {
       console.error('Error adding user:', error);
     }
   };
+  
+
 
   useEffect(() => {
     fetchUsers();

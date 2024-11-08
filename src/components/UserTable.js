@@ -18,6 +18,19 @@ const UserTable = () => {
     const [messageDelete, setMessageDelete] = useState(''); // State for delete error or success message
     const entriesPerPage = 10;
 
+    // Reverse the users array to render from last to first
+    const reversedUsers = [...users].reverse();
+
+    // Paginate the reversed users array
+    const totalEntries = reversedUsers.length;
+    const totalPages = Math.ceil(totalEntries / entriesPerPage);
+    const startIndex = (currentPage - 1) * entriesPerPage;
+    const currentUsers = reversedUsers.slice(startIndex, startIndex + entriesPerPage);
+
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+    };
+
     useEffect(() => {
         fetchUsers(); // Fetch users when the component mounts
     }, [fetchUsers]);
@@ -31,7 +44,7 @@ const UserTable = () => {
         setIsModalOpen(false);
         setCurrentUser(null);
         setMessage('');
-        fetchUsers(); // Refresh users after closing modal
+        // fetchUsers(); // Avoid fetching users after adding new user
     };
 
     const handleEdit = async (updatedUser) => {
@@ -62,7 +75,7 @@ const UserTable = () => {
             ));
             setSelectedUsers(new Set()); // Reset selected users
             setShowDeleteModal(false); // Close the modal
-            fetchUsers(); // Refresh the user list
+            fetchUsers(); // Refresh the user list after delete
         } catch (error) {
             console.error("Error deleting users:", error);
             setMessageDelete('Failed to delete users');
@@ -82,15 +95,6 @@ const UserTable = () => {
         return `${day}-${month}-${year}`;
     };
 
-    const totalEntries = users.length;
-    const totalPages = Math.ceil(totalEntries / entriesPerPage);
-    const startIndex = (currentPage - 1) * entriesPerPage;
-    const currentUsers = users.slice(startIndex, startIndex + entriesPerPage);
-
-    const handlePageChange = (page) => {
-        setCurrentPage(page);
-    };
-
     return (
         <div>
             <h2 className="centered">User List</h2>
@@ -106,7 +110,6 @@ const UserTable = () => {
                 <thead>
                     <tr>
                         <th>Select</th>
-                        <th>ID</th>
                         <th>First Name</th>
                         <th>Last Name</th>
                         <th>Date of Birth</th>
@@ -128,7 +131,6 @@ const UserTable = () => {
                                     onChange={() => handleSelectUser(user.id)} 
                                 />
                             </td>
-                            <td>{user.id}</td>
                             <td>{user.first_name}</td>
                             <td>{user.last_name}</td>
                             <td>{formatDate(user.dob)}</td>
